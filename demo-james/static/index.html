@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAMES - Electrodomésticos, Tecnología y Respaldo</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #dc2626;
+            --primary-hover: #b91c1c;
+            --primary-light: #fef2f2;
+            --dark: #0f172a;
+            --gray-text: #475569;
+            --light-gray: #f8fafc;
+            --border: #e2e8f0;
+            --shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--light-gray);
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 1.2rem 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        
+        .logo { 
+            font-weight: 800; 
+            color: var(--dark); 
+            font-size: 1.6rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+        
+        .nav-links { 
+            display: flex; 
+            gap: 2rem; 
+            color: var(--gray-text); 
+            font-weight: 500; 
+        }
+
+        .nav-links span {
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .nav-links span:hover {
+            color: var(--primary);
+        }
+        
+        /* --- Hero Section --- */
+        .hero {
+            padding: 4rem 8% 6rem 8%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #fff 0%, #fafafa 100%);
+            min-height: 80vh;
+            gap: 4rem;
+        }
+        
+        .hero-text { 
+            max-width: 600px; 
+            flex: 1;
+        }
+        
+        .hero-text h1 { 
+            font-size: 3.5rem; 
+            font-weight: 800;
+            color: var(--dark); 
+            margin-bottom: 1.5rem; 
+            line-height: 1.15; 
+            letter-spacing: -1px;
+        }
+
+        .hero-text h1 span {
+            background: linear-gradient(to right, var(--primary), #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero-text p { 
+            font-size: 1.15rem; 
+            color: var(--gray-text); 
+            margin-bottom: 2.5rem; 
+            line-height: 1.6;
+        }
+        
+        .btn-primary { 
+            background: var(--primary); 
+            color: white; 
+            padding: 0.9rem 2.2rem; 
+            border-radius: 50px; 
+            text-decoration: none; 
+            font-weight: 600; 
+            box-shadow: 0 8px 20px -6px rgba(220, 38, 38, 0.4);
+            transition: var(--transition);
+            display: inline-block;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -6px rgba(220, 38, 38, 0.5);
+        }
+
+        .hero-img {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-img img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.15);
+            transition: var(--transition);
+        }
+
+        .hero-img img:hover {
+            transform: scale(1.02);
+        }
+
+        /* --- Features section --- */
+        .features {
+            padding: 4rem 8%;
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            gap: 2rem;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .feature-card {
+            flex: 1;
+            padding: 2rem;
+            border-radius: 16px;
+            background: var(--light-gray);
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: white;
+            border-color: var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--gray-text);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* --- Floating Chat Widget --- */
+        #chat-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        /* Circular Pulse Button */
+        #chat-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+            transition: var(--transition);
+            position: relative;
+        }
+        
+        #chat-button:hover { 
+            transform: scale(1.08) rotate(5deg); 
+            box-shadow: 0 10px 28px rgba(220, 38, 38, 0.5);
+        }
+        
+        #chat-button i { 
+            font-size: 24px; 
+        }
+
+        /* Chat Window Container */
+        #chat-window {
+            width: 400px;
+            height: 550px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.15);
+            display: none; 
+            flex-direction: column;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #b91c1c 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header-info h3 { 
+            font-size: 1.05rem; 
+            font-weight: 700; 
+            letter-spacing: -0.2px;
+        }
+
+        .chat-header-info div {
+            font-size: 0.75rem; 
+            opacity: 0.85; 
+            margin-top: 2px;
+        }
+        
+        .chat-header .close-btn { 
+            cursor: pointer; 
+            opacity: 0.8; 
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.1);
+            transition: var(--transition);
+        }
+
+        .chat-header .close-btn:hover { 
+            opacity: 1; 
+            background: rgba(255,255,255,0.2);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: #f8fafc;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user { 
+            align-self: flex-end; 
+            background: var(--primary); 
+            color: white; 
+            border-bottom-right-radius: 4px; 
+            box-shadow: 0 4px 12px -4px rgba(220, 38, 38, 0.3);
+        }
+
+        .assistant { 
+            align-self: flex-start; 
+            background: white; 
+            color: var(--dark); 
+            border-bottom-left-radius: 4px; 
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04); 
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* Suggestion Chips */
+        .suggestions-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+            margin-bottom: 4px;
+        }
+
+        .suggestion-chip {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .suggestion-chip:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        /* Sources formatting */
+        .sources {
+            font-size: 0.72rem;
+            color: var(--gray-text);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(226, 232, 240, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .source-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 2px;
+        }
+
+        .source-tag {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+            width: fit-content;
+        }
+
+        /* Input Container */
+        .chat-input {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            background: white;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 10px 18px;
+            outline: none;
+            font-size: 0.88rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--light-gray);
+        }
+
+        .chat-input input:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+        }
+
+        .chat-input button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2);
+            flex-shrink: 0;
+        }
+
+        .chat-input button:hover {
+            background: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        .chat-input button:disabled {
+            background: #cbd5e1;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .typing { 
+            opacity: 0.7; 
+            font-size: 0.8rem; 
+            font-style: italic; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+        
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Simulación de Web JAMES -->
+    <nav class="navbar">
+        <div class="logo">
+            <span>J</span>AMES
+        </div>
+        <div class="nav-links">
+            <span>Televisores</span>
+            <span>Aires Acondicionados</span>
+            <span>Refrigeradores</span>
+            <span>Termotanques</span>
+            <span>Service Oficial</span>
+        </div>
+    </nav>
+
+    <main class="hero">
+        <div class="hero-text">
+            <h1>Por su respaldo, en nuestro hogar <span>confiamos en JAMES</span></h1>
+            <p>Explorá nuestro catálogo completo de electrodomésticos, tecnología y soluciones para el hogar. Contamos con el respaldo y servicio técnico líder en Uruguay desde 1963.</p>
+            <a href="#" class="btn-primary" onclick="toggleChat(); return false;">Consultar Catálogo</a>
+        </div>
+        
+        <div class="hero-img">
+            <img src="/static/logo.png" id="hero-img-element" alt="JAMES Electrodomésticos" />
+        </div>
+    </main>
+
+    <section class="features">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-tools"></i></div>
+            <h3>Service Oficial</h3>
+            <p>Mayor respaldo y respuesta técnica inmediata en Montevideo y Maldonado para toda nuestra línea de productos.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-certificate"></i></div>
+            <h3>Garantía de Respaldo</h3>
+            <p>Materiales de primera calidad como termotanques con tanque de cobre y tecnologías eficientes con certificación energética.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fas fa-store"></i></div>
+            <h3>Showroom Exclusivo</h3>
+            <p>Vení a conocer las últimas novedades en Vázquez Sagastume 256. Te brindamos asesoramiento personalizado.</p>
+        </div>
+    </section>
+
+    <!-- Widget de Chat Flotante -->
+    <div id="chat-widget">
+        <!-- Ventana de Chat -->
+        <div id="chat-window">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <h3>Asistente de Catálogo JAMES</h3>
+                    <div>Especificaciones de electrodomésticos y servicio técnico</div>
+                </div>
+                <div class="close-btn" onclick="toggleChat()">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message assistant">
+                    ¡Hola! Soy el asistente virtual de <strong>JAMES Uruguay</strong>. Puedo darte especificaciones exactas, medidas, y características técnicas de nuestros productos (TVs, heladeras, lavarropas, termotanques) e info de soporte técnico. ¿En qué producto estás interesado?
+                    <div class="suggestions-container">
+                        <span class="suggestion-chip" onclick="askPreset('¿Dónde queda el showroom y qué horarios tiene?')">Showroom y Horarios</span>
+                        <span class="suggestion-chip" onclick="askPreset('¿Qué medidas tiene el TV modelo TVJ LED S50?')">Medidas de TV 50"</span>
+                        <span class="suggestion-chip" onclick="askPreset('¿Cómo contacto al service de Montevideo?')">Contacto Service</span>
+                        <span class="suggestion-chip" onclick="askPreset('¿Qué heladeras tienen motor Inverter?')">Heladeras Inverter</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="user-input" placeholder="Pregúntame sobre un producto o modelo..." 
+                       onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()" id="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Botón Circular -->
+        <div id="chat-button" onclick="toggleChat()">
+            <i class="fas fa-comment-dots" id="chat-icon"></i>
+        </div>
+    </div>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const chatIcon = document.getElementById('chat-icon');
+        const sendBtn = document.getElementById('send-btn');
+        const heroImg = document.getElementById('hero-img-element');
+
+        // Intentar actualizar la imagen de hero con la generada para JAMES
+        // Si no existe, fallará silenciosamente a logo.png
+        const imgTest = new Image();
+        imgTest.onload = function() {
+            heroImg.src = "/static/james_hero.png";
+        };
+        imgTest.src = "/static/james_hero.png";
+
+        let isOpen = false;
+
+        function toggleChat() {
+            isOpen = !isOpen;
+            chatWindow.style.display = isOpen ? 'flex' : 'none';
+            chatIcon.className = isOpen ? 'fas fa-chevron-down' : 'fas fa-comment-dots';
+            if (isOpen) {
+                setTimeout(() => userInput.focus(), 100);
+            }
+        }
+
+        function askPreset(question) {
+            userInput.value = question;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const question = userInput.value.trim();
+            if (!question) return;
+
+            addMessage(question, 'user');
+            userInput.value = '';
+            
+            // Bloquear input mientras carga
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+
+            const typing = document.createElement('div');
+            typing.className = 'message assistant typing';
+            typing.id = 'typing-indicator';
+            typing.innerHTML = 'Consultando catálogo JAMES... <div class="typing-dots"><span></span><span></span><span></span></div>';
+            chatMessages.appendChild(typing);
+            scrollToBottom();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+                const data = await response.json();
+                
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) chatMessages.removeChild(indicator);
+
+                let content = formatMarkdown(data.answer);
+                if (data.sources && data.sources.length > 0) {
+                    const sourcesHtml = '<div class="sources"><div class="source-title"><i class="fas fa-book-open"></i> Fuentes del Catálogo:</div>' + 
+                        data.sources.map(s => `<span class="source-tag"><i class="fas fa-file-pdf"></i> Pág. ${s.page} (${s.source})</span>`).join('') +
+                        '</div>';
+                    content += sourcesHtml;
+                }
+
+                addMessage(content, 'assistant', true);
+            } catch (error) {
+                const indicator = document.getElementById('typing-indicator');
+                if (indicator) chatMessages.removeChild(indicator);
+                addMessage('Lo siento, hubo un error de conexión con la base de datos de JAMES. Intente nuevamente.', 'assistant');
+            }
+
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+
+        function addMessage(text, role, isHtml = false) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            if (isHtml) {
+                div.innerHTML = text;
+            } else {
+                div.textContent = text;
+            }
+            chatMessages.appendChild(div);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Formateador markdown básico para las respuestas del LLM
+        function formatMarkdown(text) {
+            // Reemplazar saltos de línea por <br>
+            let formatted = text.replace(/\n/g, '<br>');
+            // Negritas **texto**
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Listas con bullets
+            formatted = formatted.replace(/(?:^|<br>)\s*·\s*(.*?)(?=<br>|$)/g, '$&').replace(/·/g, '&bull;');
+            formatted = formatted.replace(/(?:^|<br>)\s*-\s*(.*?)(?=<br>|$)/g, '$&').replace(/ - /g, ' &bull; ');
+            return formatted;
+        }
+    </script>
+</body>
+</html>
