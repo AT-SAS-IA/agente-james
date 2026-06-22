@@ -30,7 +30,7 @@ COLLECTION = os.getenv("QDRANT_COLLECTION", "credito-demo")
 
 # ── Clientes ──
 embed_model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-qdrant = AsyncQdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+qdrant = AsyncQdrantClient(path="./qdrant_db")
 azure_client = AzureOpenAI(
     api_version=api_version,
     azure_endpoint=endpoint,
@@ -318,6 +318,12 @@ def expand_query(question: str) -> list:
         "lavasecarropa": [
             "lavado y secado lavarropas carga frontal carga superior secadora motor inverter centrifugado"
         ],
+        "lavavajillas": [
+            "lavado y secado lavavajillas cubiertos programas integrado panelable"
+        ],
+        "frigobar": [
+            "refrigeradores frio humedo frigobar mas chico pequeno bar habitacion"
+        ],
         "cocina": [
             "cocinas gas supergas combinadas anafes gas vitroceramica induccion"
         ],
@@ -399,13 +405,14 @@ async def rewrite_query(question: str, history: list[Message]) -> dict:
     system_prompt = (
         "Sos un experto en reescritura de consultas y clasificación para un sistema RAG de electrodomésticos JAMES Uruguay.\n"
         "Tu tarea es analizar la pregunta actual del usuario y el historial de chat para devolver un JSON con dos campos:\n"
-        "1. 'category': La categoría del catálogo de JAMES a la que pertenece la consulta. Debe ser exactamente una de las siguientes:\n"
+        "1. 'category': La categoría del catálogo de JAMES a la que pertenece la consulta. Debe ser exactamente una de las siguientes (debes retornar solo la clave principal, sin los textos entre paréntesis):\n"
         "   - TELEVISORES LED SMART TV\n"
         "   - ACONDICIONADORES DE AIRE SPLIT\n"
         "   - DESHUMIDIFICADORES\n"
-        "   - REFRIGERADORES\n"
+        "   - REFRIGERADORES (para heladeras, refrigeradores y frigobares)\n"
         "   - FREEZERS\n"
-        "   - LAVADO Y SECADO\n"
+        "   - LAVADO Y SECADO (para lavarropas, secarropas y lavasecarropas)\n"
+        "   - LAVAVAJILLAS\n"
         "   - COCINAS\n"
         "   - ANAFES\n"
         "   - HORNOS DE EMPOTRAR\n"
@@ -415,7 +422,7 @@ async def rewrite_query(question: str, history: list[Message]) -> dict:
         "   - HORNOS ELÉCTRICOS\n"
         "   - HORNOS MICROONDAS\n"
         "   - ASPIRADORAS\n"
-        "   - PEQUEÑOS ELECTRODOMÉSTICOS\n"
+        "   - PEQUEÑOS ELECTRODOMÉSTICOS (para mixers, licuadoras, cafeteras, tostadoras, jarras, soperas)\n"
         "   - ESTUFAS\n"
         "   - VENTILADORES\n"
         "   - TERMOTANQUES\n"
@@ -544,6 +551,8 @@ async def chat(req: ChatRequest):
     rewrite = await rewrite_query(req.question, req.history)
     rewritten_query = rewrite.get("rewritten_query", req.question)
     category = rewrite.get("category", "NINGUNA")
+    if category:
+        category = category.split("(")[0].strip().upper()
     
     print(f"\n[DEBUG] Original: '{req.question}' | Rewritten: '{rewritten_query}' | Category: '{category}'")
 

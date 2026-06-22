@@ -50,14 +50,19 @@
             border-bottom: 1px solid rgba(226, 232, 240, 0.5);
         }
         
-        .logo { 
-            font-weight: 800; 
-            color: var(--dark); 
-            font-size: 1.6rem; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px;
+        .logo {
+            font-weight: 800;
+            color: var(--dark);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 16px;
             letter-spacing: -0.5px;
+        }
+
+        .logo-img {
+            height: 56px;
+            object-fit: contain;
         }
 
         .logo span {
@@ -482,6 +487,71 @@
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1.0); }
         }
+
+        /* --- Responsive Design Queries --- */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem 5%;
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+            .logo-img {
+                height: 48px;
+            }
+            .nav-links {
+                gap: 1.2rem;
+                flex-wrap: wrap;
+                justify-content: center;
+                font-size: 0.85rem;
+            }
+
+            .hero {
+                flex-direction: column;
+                padding: 2.5rem 5% 4rem 5%;
+                gap: 2.5rem;
+                min-height: auto;
+                text-align: center;
+            }
+            .hero-text h1 {
+                font-size: 2.4rem;
+                line-height: 1.2;
+            }
+            .hero-text p {
+                font-size: 1rem;
+                margin-bottom: 1.8rem;
+            }
+            .hero-img img {
+                max-width: 100%;
+            }
+
+            .features {
+                flex-direction: column;
+                padding: 3rem 5%;
+                gap: 1.5rem;
+            }
+            .feature-card {
+                padding: 1.5rem;
+            }
+
+            #chat-window {
+                width: calc(100vw - 32px);
+                height: 70vh;
+                max-height: 520px;
+                margin-bottom: 12px;
+            }
+            #chat-widget {
+                bottom: 20px;
+                right: 16px;
+            }
+            #chat-button {
+                width: 52px;
+                height: 52px;
+            }
+            #chat-button i {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -489,7 +559,8 @@
     <!-- Simulación de Web JAMES -->
     <nav class="navbar">
         <div class="logo">
-            <span>J</span>AMES
+            <img src="media/logo.png" alt="JAMES logo" class="logo-img">
+
         </div>
         <div class="nav-links">
             <span>Televisores</span>
@@ -508,7 +579,7 @@
         </div>
         
         <div class="hero-img">
-            <img src="/static/logo.png" id="hero-img-element" alt="JAMES Electrodomésticos" />
+            <img src="media/james_hero.jpg" id="hero-img-element" alt="JAMES Electrodomésticos" />
         </div>
     </main>
 
@@ -547,10 +618,10 @@
                 <div class="message assistant">
                     ¡Hola! Soy el asistente virtual de <strong>JAMES Uruguay</strong>. Puedo darte especificaciones exactas, medidas, y características técnicas de nuestros productos (TVs, heladeras, lavarropas, termotanques) e info de soporte técnico. ¿En qué producto estás interesado?
                     <div class="suggestions-container">
-                        <span class="suggestion-chip" onclick="askPreset('¿Dónde queda el showroom y qué horarios tiene?')">Showroom y Horarios</span>
-                        <span class="suggestion-chip" onclick="askPreset('¿Qué medidas tiene el TV modelo TVJ LED S50?')">Medidas de TV 50"</span>
-                        <span class="suggestion-chip" onclick="askPreset('¿Cómo contacto al service de Montevideo?')">Contacto Service</span>
-                        <span class="suggestion-chip" onclick="askPreset('¿Qué heladeras tienen motor Inverter?')">Heladeras Inverter</span>
+                        <span class="suggestion-chip" onclick="askPreset('Ver heladeras')">🧊 Ver heladeras</span>
+                        <span class="suggestion-chip" onclick="askPreset('Ver televisores')">📺 Ver televisores</span>
+                        <span class="suggestion-chip" onclick="askPreset('Contacto y Service ')">☎️ Contacto y Service</span>
+                        <span class="suggestion-chip" onclick="askPreset('Horarios y showroom')">📍 Horarios y showroom</span>
                     </div>
                 </div>
             </div>
@@ -570,20 +641,16 @@
     </div>
 
     <script>
+        // CONFIGURACIÓN DE CONEXIÓN AL BACKEND:
+        // - Para probar local: usa 'http://localhost:8000'
+        const BACKEND_URL = window.location.origin;
+
         const chatWindow = document.getElementById('chat-window');
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
         const chatIcon = document.getElementById('chat-icon');
         const sendBtn = document.getElementById('send-btn');
         const heroImg = document.getElementById('hero-img-element');
-
-        // Intentar actualizar la imagen de hero con la generada para JAMES
-        // Si no existe, fallará silenciosamente a logo.png
-        const imgTest = new Image();
-        imgTest.onload = function() {
-            heroImg.src = "/static/james_hero.png";
-        };
-        imgTest.src = "/static/james_hero.png";
 
         let isOpen = false;
 
@@ -600,6 +667,8 @@
             userInput.value = question;
             sendMessage();
         }
+
+        let chatHistory = [];
 
         async function sendMessage() {
             const question = userInput.value.trim();
@@ -620,10 +689,10 @@
             scrollToBottom();
 
             try {
-                const response = await fetch('/chat', {
+                const response = await fetch(`${BACKEND_URL}/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question })
+                    body: JSON.stringify({ question, history: chatHistory })
                 });
                 const data = await response.json();
                 
@@ -639,7 +708,12 @@
                 }
 
                 addMessage(content, 'assistant', true);
+
+                // Guardar en el historial
+                chatHistory.push({ role: 'user', content: question });
+                chatHistory.push({ role: 'assistant', content: data.answer });
             } catch (error) {
+                console.error("Error en chat:", error);
                 const indicator = document.getElementById('typing-indicator');
                 if (indicator) chatMessages.removeChild(indicator);
                 addMessage('Lo siento, hubo un error de conexión con la base de datos de JAMES. Intente nuevamente.', 'assistant');
@@ -668,11 +742,8 @@
 
         // Formateador markdown básico para las respuestas del LLM
         function formatMarkdown(text) {
-            // Reemplazar saltos de línea por <br>
             let formatted = text.replace(/\n/g, '<br>');
-            // Negritas **texto**
             formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            // Listas con bullets
             formatted = formatted.replace(/(?:^|<br>)\s*·\s*(.*?)(?=<br>|$)/g, '$&').replace(/·/g, '&bull;');
             formatted = formatted.replace(/(?:^|<br>)\s*-\s*(.*?)(?=<br>|$)/g, '$&').replace(/ - /g, ' &bull; ');
             return formatted;
