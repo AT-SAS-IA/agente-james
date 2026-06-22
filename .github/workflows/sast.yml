@@ -1,0 +1,42 @@
+name: Security Scan (SAST)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  bandit:
+    name: Run Bandit (Python SAST)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit Scan
+        # Escanear recursivamente demo-james/ excluyendo scripts de test/desarrollo y caches
+        run: bandit -r demo-james/ -x "**/test_*.py,**/inspect_*.py,**/search_*.py,**/read_*.py,**/check_*.py,**/repair_app.py"
+
+  trivy:
+    name: Run Trivy (Vulnerability Scan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy FS Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
