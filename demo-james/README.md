@@ -1,32 +1,32 @@
-# 🤖 Agente RAG – Casa de Crédito
+# 🤖 Blueprint RAG – Agente Genérico de Consulta de Documentación
 
-Agente conversacional basado en Retrieval-Augmented Generation (RAG) que permite
-consultar documentación oficial en PDF de una casa de crédito (beneficios,
-condiciones, tasas, vigencias), respondiendo únicamente con información verificable
-y citando fuentes.
+Este documento describe la arquitectura de referencia, buenas prácticas y hoja de ruta para la implementación de un agente conversacional basado en **Retrieval-Augmented Generation (RAG)** de nivel empresarial. Permite consultar de forma interactiva documentación oficial en PDF (especificaciones, reglamentos, catálogos, manuales o preguntas frecuentes), respondiendo únicamente con información verificable y citando fuentes y páginas.
 
 ---
 
 ## 📌 Objetivo
 
-Diseñar e implementar un agente RAG de bajo costo que permita consultar de forma
-segura y trazable la documentación oficial en PDF, sin depender de plataformas
-como Copilot Studio ni de licencias enterprise.
+Diseñar e implementar un agente RAG seguro, eficiente y de bajo costo operativo que permita consultar de forma trazable y segura la documentación corporativa, sin depender de plataformas propietarias rígidas y garantizando cero alucinaciones.
 
 ---
 
-## 🏗️ Arquitectura
+## 🏗️ Arquitectura de Referencia
 
-### Visión general
+### Visión General
 
 ```
-
 ┌─────────────────────────────────────────────────────────┐
 │                      USUARIO                            │
-│                   (Chat / Web / API)                    │
+│               (Chat Web / App / API)                    │
 └──────────────────────┬──────────────────────────────────┘
-│
-▼
+                       │
+                       ▼ HTTPS (Encriptado)
+┌─────────────────────────────────────────────────────────┐
+│               API GATEWAY / PROXY REVERSO               │
+│        (Rate Limiting & Filtro Anti-Jailbreak)          │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+                       ▼
 ┌─────────────────────────────────────────────────────────┐
 │                    BACKEND (FastAPI)                     │
 │                                                         │
@@ -41,253 +41,168 @@ como Copilot Studio ni de licencias enterprise.
 │  └──────┬──────┘    └──────┬───────┘                    │
 │         │                  │                            │
 └─────────┼──────────────────┼────────────────────────────┘
-│                  │
-▼                  ▼
+          │                  │
+          ▼                  ▼
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   Qdrant     │    │ Azure OpenAI │    │    Blob      │
-│ (Vector DB)  │    │  (LLM +      │    │  Storage     │
-│              │    │  Embeddings)  │    │  (PDFs)      │
-└──────────────┘    └──────────────┘    └──────────────┘
-
+          │   Qdrant     │    │ Azure OpenAI │    │  Almacén de  │
+          │ (Vector DB)  │    │ (LLM & Embed)│    │ Documentos   │
+          └──────────────┘    └──────────────┘    └──────────────┘
 ```
 
-### Pipeline de ingesta (offline)
+### Pipeline de Ingesta (Offline)
 
 ```
+Documentos PDF (Repositorio Local / Cloud Storage)
+│
+▼
+Extracción de Texto (PyMuPDF con procesamiento visual/layout-aware para doble columna)
+│
+▼
+Limpieza + Normalización de caracteres
+│
+▼
+Chunking Inteligente (ej: 500-800 caracteres con 100-150 de overlap)
+│
+▼
+Asignación de Metadata Enriquecida
+│   - tipo_doc (especificación / reglamento / beneficio / faq)
+│   - categoría_producto (modelo, línea, segmento)
+│   - vigencia_desde / vigencia_hasta (si aplica)
+│   - versión, url_origen, página_fisica
+│
+▼
+Generación de Embeddings (Azure OpenAI text-embedding-3-small o local)
+│
+▼
+Upsert en Base de Datos Vectorial (Vectores + Payload de metadata)
+│
+▼
+Actualización de registro de hashes para indexación incremental (registry.json)
+```
 
-PDFs (Blob Storage / URLs)
-│
-▼
-Descarga + Cache
-│
-▼
-Extracción de texto (PyMuPDF)
-│
-▼
-Limpieza + Normalización
-│
-▼
-Chunking (800 chars, 150 overlap)
-│
-▼
-Asignación de metadata
-│   - tipo\_doc (beneficio / reglamento / condiciones / promo)
-│   - producto (tarjeta X, préstamo Y)
-│   - vigencia\_desde / vigencia\_hasta
-│   - version, url\_pdf, página
-│
-▼
-Generación de embeddings (text-embedding-3-small)
-│
-▼
-Upsert en Qdrant (vector + payload)
-│
-▼
-Actualización del registro de hashes (registry.json)
+### Pipeline de Consulta (Online)
 
-
-
-### Pipeline de consulta (online)
-
-
+```
 Usuario envía pregunta
 │
 ▼
-Embedding de la pregunta
+Control de Rate Limiting (Heurística de IPs y cabeceras X-Forwarded-For)
 │
 ▼
-Búsqueda semántica en Qdrant
-│   - Top-K (5-8 chunks)
-│   - Filtros: vigencia >= hoy, producto si aplica
+Filtro de Seguridad Local (Heurísticas contra Inyección de Prompts / Jailbreaks)
 │
 ▼
-Construcción del prompt (contexto + reglas + pregunta)
+Reescritura de Query (Query Expansion / Búsqueda por Categorías)
 │
 ▼
-Generación de respuesta (Azure OpenAI / gpt-4o-mini)
+Generación del Embedding de la consulta
 │
 ▼
-Respuesta + fuentes citadas (PDF, página)
+Búsqueda Semántica Híbrida en Base Vectorial (Similitud del vector + Filtros de Payload)
+│   - Filtro por categoría o producto específico
+│   - Filtro por vigencia de documentos
+│   - Selección de Top-K chunks relevantes (score >= umbral mínimo)
 │
 ▼
-Logging (pregunta, chunks, respuesta, costo)
-
-
+Construcción del Prompt (Contexto estructurado + Reglas de comportamiento + Pregunta)
+│
+▼
+Llamada al LLM (Azure OpenAI gpt-4o-mini o superior con temperatura baja: 0.0 - 0.2)
+│
+▼
+Post-procesamiento de la respuesta (Remoción de citas crudas, formateo de texto plano)
+│
+▼
+Respuesta final + Fuentes estructuradas entregadas al usuario
+│
+▼
+Logging y Auditoría (Pregunta, chunks recuperados, respuesta final, tokens consumidos, costo)
+```
 
 ---
 
-## 🔄 Demo vs. Producto final
+## 🔄 Demo vs. Producto Final (Entorno Corporativo)
 
-La demo es un subconjunto funcional del producto final. La arquitectura
-es la misma; lo que cambia es profundidad y robustez.
-
-| Aspecto                  | Demo ✅               | Producto final 🎯              |
-|--------------------------|----------------------|-------------------------------|
-| **PDFs**                 | 1-3 manuales         | ~500, ingesta automatizada    |
-| **Vector DB**            | Qdrant (Docker)      | Qdrant (Docker / Cloud)       |
-| **Embeddings**           | sentence-transformers (local, gratis) | Azure OpenAI text-embedding-3-small |
-| **LLM**                  | Gemini (gratis) | Azure OpenAI gpt-4o-mini     |
-| **Metadata**             | Básica (source, page) | Rica (producto, vigencia, tipo_doc, version) |
-| **Ingesta**              | Manual (script)      | Incremental con hash + cron   |
-| **Detección de cambios** | No                   | Hash MD5 por PDF              |
-| **Filtros en búsqueda**  | Solo semántica       | Semántica + metadata (vigencia, producto) |
-| **Prompts**              | Genérico             | Refinado para dominio crédito |
-| **Logging**              | No                   | Consultas, fuentes, costos    |
-| **Auth**                 | No                   | Entra ID / API Key            |
-| **Frontend**             | Swagger / Postman    | Chat web                      |
-| **Deployment**           | Docker local         | Azure VM + Docker Compose     |
-| **Tests**                | Manual               | Automatizados                 |
-
-### Lo que se reutiliza de la demo
-
-
-
-✅ Estructura del proyecto (FastAPI + Qdrant + Docker)
-✅ Pipeline de ingesta (extracción → chunking → embedding → store)
-✅ Pipeline de consulta (embedding → search → prompt → LLM)
-✅ Lógica del endpoint /chat
-✅ System prompt (base)
-
-### Lo que se agrega para producción
-
-
-🔧 Metadata rica y filtros en retrieval
-🔧 Ingesta incremental (hash + registry.json)
-🔧 Azure OpenAI (embeddings + chat)
-🔧 Logging y monitoreo
-🔧 Error handling robusto
-🔧 Autenticación
-🔧 Frontend de chat
-🔧 CI/CD
-
-
-## 🛠️ Stack tecnológico (producto final)
-
-| Capa             | Tecnología                            | Costo estimado   |
-|------------------|---------------------------------------|------------------|
-| Extracción PDF   | PyMuPDF                               | $0               |
-| Chunking         | LangChain RecursiveCharacterTextSplitter | $0            |
-| Embeddings       | Azure OpenAI `text-embedding-3-small` | ~$0.10/indexado  |
-| Vector DB        | Qdrant (self-hosted, Docker)          | $0               |
-| LLM Chat         | Azure OpenAI `gpt-4o-mini`            | ~$10-30/mes      |
-| Backend          | FastAPI + Uvicorn                     | $0               |
-| Infra            | Azure VM B2s + Docker Compose         | ~$35/mes         |
-| Storage          | Azure Blob Storage                    | ~$1-3/mes        |
-| Logging          | Python logging + App Insights         | ~$0-5/mes        |
-| **Total**        |                                       | **~$50-75/mes**  |
+| Aspecto | Demo / Piloto ✅ | Producto Final (Producción) 🎯 |
+| :--- | :--- | :--- |
+| **Documentos PDF** | 1-5 subidos de forma manual | Escala masiva con ingesta y syncing automatizado |
+| **Vector DB** | Qdrant en-proceso (SQLite local / embebido) | Qdrant en la nube (Docker dedicado / Qdrant Cloud) |
+| **Embeddings** | Locales en CPU (`sentence-transformers` gratis) | Azure OpenAI (`text-embedding-3-small` / `large`) |
+| **Modelos de Chat (LLM)** | Azure OpenAI (`gpt-4o-mini` / `gpt-4o`) | Azure OpenAI (`gpt-4o-mini` / `gpt-4o` con despliegues dedicados) |
+| **Seguridad de Entrada** | Regex básico local anti-jailbreak | Filtros avanzados AI (LlamaGuard) + Rate Limits en API Gateway |
+| **Rate Limiting** | En memoria del contenedor backend | Redis distribuido o políticas nativas en Azure APIM |
+| **Metadata** | Básica (fuente, página) | Rica (producto, categoría, vigencia, versión) |
+| **Ingesta** | Manual ejecutando scripts en host | Incremental con hashes MD5 + Jobs de sincronización cron |
+| **Detección de cambios** | No (recreación completa) | Comparación de hash MD5 por archivo |
+| **Filtros en búsqueda** | Solo similitud semántica | Búsqueda híbrida (Semántica + Filtros de Payload específicos) |
+| **Logging y Auditoría** | Consola local | Logging estructurado y observabilidad (OpenTelemetry / App Insights) |
+| **Deployment** | Contenedor local / Servidor standalone | Orquestadores como Azure Container Apps / Kubernetes (AKS) |
 
 ---
 
-## 📁 Estructura del proyecto
+## 🛠️ Stack Tecnológico de Referencia
 
-rag-credito/
+| Capa | Tecnología Recomendada | Razón de elección |
+| :--- | :--- | :--- |
+| **Extracción PDF** | PyMuPDF | Rápido, ligero y con soporte para coordenadas y lectura de bloques nativa. |
+| **Chunking** | LangChain TextSplitters | Permite división recursiva por oraciones manteniendo semántica intacta. |
+| **Embeddings** | Azure OpenAI `text-embedding-3-small` | Alta dimensionalidad y bajo costo transaccional. |
+| **Vector DB** | Qdrant | Excelente rendimiento en filtros híbridos y opción en-proceso para bajo costo. |
+| **LLM Chat** | Azure OpenAI `gpt-4o-mini` | La mejor relación calidad-precio y velocidad para generación de respuestas RAG. |
+| **Backend API** | FastAPI + Uvicorn | Asíncrono, de alto rendimiento y documentación automática (OpenAPI). |
+| **Pipeline de CI/CD** | GitHub Actions | Automatización de builds, pruebas unitarias y análisis estático de seguridad (SAST). |
+| **Seguridad SAST** | Bandit + Trivy | Herramientas open-source líderes para escanear vulnerabilidades en código y empaquetado. |
+
+---
+
+## 📁 Estructura del Proyecto Recomendada
+
+```
+rag-proyecto/
 │
-├── docker-compose.yml
-├── .env.example
-├── .gitignore
-├── README.md
+├── .github/workflows/
+│   └── sast.yml                 # Integración continua (Scans automáticos)
+│
+├── .dockerignore                # Exclusiones del build de Docker
+├── Dockerfile                   # Build de producción
+├── docker-compose.yml           # Orquestación local de desarrollo
+├── requirements.txt             # Dependencias del backend
+├── main.py                      # Punto de entrada de la API
 │
 ├── app/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   ├── main.py
-│   │
 │   ├── api/
-│   │   ├── **init**.py
-│   │   ├── chat.py             # POST /chat
-│   │   └── ingest.py           # POST /ingest
+│   │   ├── chat.py              # Endpoint principal de consulta (/chat)
+│   │   └── ingest.py            # Endpoint para administración de ingesta (/ingest)
 │   │
 │   ├── core/
-│   │   ├── **init**.py
-│   │   ├── config.py           # Variables de entorno
-│   │   ├── embeddings.py       # Cliente de embeddings
-│   │   ├── llm.py              # Cliente Azure OpenAI
-│   │   └── prompts.py          # System prompt + reglas
+│   │   ├── config.py            # Gestión de variables de entorno y secrets
+│   │   ├── security.py          # Validaciones anti-jailbreak y sanitización
+│   │   └── prompts.py           # Estructura del prompt y reglas de negocio
 │   │
 │   ├── ingestion/
-│   │   ├── **init**.py
-│   │   ├── pdf\_loader.py       # Descarga + extracción
-│   │   ├── cleaner.py          # Limpieza de texto
-│   │   ├── chunker.py          # Chunking
-│   │   ├── metadata.py         # Asignación de metadata
-│   │   └── registry.py         # Control de hashes
+│   │   ├── parser.py            # Extracción y estructuración de PDF
+│   │   ├── chunker.py           # Estrategias de chunking
+│   │   └── registry.py          # Comparación de hashes para ingesta incremental
 │   │
-│   ├── retrieval/
-│   │   ├── **init**.py
-│   │   ├── vector\_store.py     # Cliente Qdrant
-│   │   └── search.py           # Búsqueda + filtros
-│   │
-│   └── utils/
-│       ├── **init**.py
-│       └── logger.py
+│   └── retrieval/
+│       ├── vector_store.py      # Cliente de conexión a la Base de Datos Vectorial
+│       └── search.py            # Búsqueda semántica y lógica de filtros
 │
 ├── data/
-│   ├── pdfs/
-│   └── registry.json
+│   ├── source_pdfs/             # Archivos PDF originales
+│   └── registry.json            # Tabla de hashes e historial de indexación
 │
 └── tests/
-├── test\_ingestion.py
-├── test\_retrieval.py
-└── test\_chat.py
+    ├── test_ingestion.py        # Cobertura de tests de extracción
+    └── test_chat.py             # Pruebas automatizadas de conversación RAG
+```
 
 ---
 
-## 📋 Etapas del proyecto
+## 🔒 Reglas Invariables del Agente Conversacional
 
-1. **Ingesta de PDFs y preprocesamiento**
-   - Extracción, limpieza, chunking
-
-2. **Modelado de metadata**
-   - Atributos por chunk (producto, vigencia, tipo_doc)
-
-3. **Base de datos vectorial y búsqueda indexada**
-   - Embeddings, indexación, búsqueda semántica + filtros
-
-4. **Implementación del agente RAG**
-   - Integración retrieval + LLM, reglas de respuesta, prompts
-
-5. **Ajustes finales del modelo**
-   - Refinamiento de respuestas, tono, manejo de errores
-
-6. **Testeo del agente**
-   - Consultas reales, casos borde, evaluación de precisión
-
-7. **Documentación, logs y monitoreo**
-   - Registro de consultas, métricas, documentación técnica
-
----
-
-## 🔒 Reglas del agente
-
-1. **No inventar.** Si no hay contexto suficiente → "No cuento con
-   información sobre este tema en la documentación disponible."
-2. **Citar siempre.** Cada respuesta incluye documento fuente y página.
-3. **Respetar vigencias.** Si el documento tiene fecha, mencionarla.
-4. **Disclaimer.** "Esta información surge de la documentación disponible.
-   Ante dudas, consulte canales oficiales."
-5. **No opinar.** No recomendar, comparar ni emitir juicios.
-
----
-
-## 🚀 Evolución futura
-
-| Mejora                    | Cuándo              | Esfuerzo |
-|---------------------------|---------------------|----------|
-| LangGraph (agente iterativo) | Si se necesita más precisión | Medio |
-| Auth (Entra ID)           | Exposición externa  | Bajo     |
-| Analytics (qué preguntan más) | Post-lanzamiento | Bajo     |
-| Migrar a Azure AI Search  | Si lo pide compliance | Bajo   |
-| Frontend dedicado         | Cuando se defina UX | Variable |
-
----
-
-## 📄 Licencias
-
-- **Qdrant**: Apache 2.0
-- **PyMuPDF**: GNU AGPL v3
-- **sentence-transformers**: Apache 2.0
-- **FastAPI**: MIT
-
-***
-
-Listo para subirlo al repo. ¿Querés que te lo genere como **archivo descargable**, o con esto lo copiás directo? 🚀
+1. **No inventar (Factualidad):** Si la información recuperada del contexto es insuficiente, responder con una plantilla neutra: *"No cuento con información sobre este tema en la documentación disponible."*
+2. **Citar siempre (Trazabilidad):** Cada fragmento de información proporcionado en la respuesta debe ir acompañado de su fuente formal (nombre de documento y página física).
+3. **Respetar vigencias:** Si la información recuperada tiene condiciones temporales explícitas en su metadata, el agente debe advertir al usuario sobre su período de validez.
+4. **Mantener neutralidad profesional:** El agente no debe dar opiniones personales, consejos comerciales subjetivos ni hacer juicios de valor. Se limita a reportar objetivamente lo que indica la documentación.
+5. **Alineación con el Dominio:** Rechazar amablemente cualquier consulta fuera de tema y redirigir la conversación de manera fluida y educada hacia la documentación oficial del proyecto.
