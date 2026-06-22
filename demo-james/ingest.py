@@ -14,7 +14,7 @@ load_dotenv()
 # ── Config ──
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
-COLLECTION = os.getenv("QDRANT_COLLECTION", "credito-demo")
+COLLECTION = os.getenv("QDRANT_COLLECTION", "james-demo")
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", 800))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", 150))
 

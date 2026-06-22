@@ -1,0 +1,36 @@
+# Excluir archivo de configuración local y secretos
+.env
+
+# Excluir control de versiones
+.git
+.gitignore
+
+# Excluir archivos de configuración de Docker local
+docker-compose.yml
+docker-compose.azure.yml
+Dockerfile
+
+# Excluir directorios de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+venv/
+.venv/
+
+# Excluir scripts de desarrollo, test e ingesta (ya que solo se ejecutan localmente en el host)
+scripts/
+ingest.py
+test_*.py
+search_*.py
+inspect_*.py
+read_*.py
+check_*.py
+repair_app.py
+
+# Excluir archivos del catálogo original y crudos (los datos ya están pre-buildeados en qdrant_db)
+data/
+catalogo_james_productos.csv
+catalogo_james_productos.json
+catalogo_james_productos.xlsx
